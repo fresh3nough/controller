@@ -28,8 +28,8 @@ import com.controller.xboxhid.ui.theme.FaceY
 @Composable
 fun FaceButtonCluster(
     modifier: Modifier = Modifier,
-    buttonSize: Dp = 70.dp,
-    span: Dp = 82.dp,
+    buttonSize: Dp = 88.dp,
+    span: Dp = 103.dp,
     aPressed: Boolean,
     bPressed: Boolean,
     xPressed: Boolean,

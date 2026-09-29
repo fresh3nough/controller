@@ -172,13 +172,13 @@ fun ControllerScreen(vm: ControllerViewModel) {
                 val availW = maxWidth
 
                 // Compact sticks so RS+R3 fit above shell curve
-                val stick = min(min(availH * 0.26f, availW * 0.20f), 128.dp)
-                // D-pad ~+20% vs original 148dp
-                val dpad = min(min(availH * 0.34f, availW * 0.26f), 168.dp)
-                // ABXY +20% fatter
-                val faceBtn = min(stick * 0.55f, 70.dp)
-                val faceSpan = min(stick * 0.65f, 82.dp)
-                val faceToStickGap = 12.dp
+                val stick = min(min(availH * 0.24f, availW * 0.18f), 118.dp)
+                // D-pad +35% vs previous 168dp cap
+                val dpad = min(min(availH * 0.42f, availW * 0.30f), 227.dp)
+                // ABXY +25% fatter vs previous 70/82
+                val faceBtn = min(stick * 0.72f, 88.dp)
+                val faceSpan = min(stick * 0.84f, 103.dp)
+                val faceToStickGap = 10.dp
                 // L3 pill ↔ D-pad (~15px)
                 val l3ToDpadGap = 15.dp
 

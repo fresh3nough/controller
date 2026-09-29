@@ -27,7 +27,7 @@ import com.controller.xboxhid.ui.theme.NeonRed
 @Composable
 fun Dpad(
     modifier: Modifier = Modifier,
-    size: Dp = 148.dp,
+    size: Dp = 227.dp,
     arm: Dp = 48.dp,
     up: Boolean,
     down: Boolean,
