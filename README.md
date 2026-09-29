@@ -4,7 +4,7 @@
 
 Turn an **Android 9+** phone into a **Bluetooth Xbox-style gamepad** with a neon cyberpunk skin. Your MacBook pairs it like a real controller — no Mac app required. Works with **Xbox Cloud Gaming** (`xbox.com/play`) via the browser Gamepad API.
 
-**v1.4.0** — D-pad fixed for Chrome/Xbox Cloud (hat + buttons 12–15), cyberpunk neon red/black/orange UI, larger ABXY, equal sticks.
+**v1.4.1** — Stick Y polarity fixed for Chrome/Xbox Cloud (look up = HID 0). **v1.4.0** — D-pad dual-report, cyberpunk neon UI, larger ABXY, equal sticks.
 
 ```
 Android App (Compose UI + HID Profile) ──Bluetooth──▶ Mac sees "Pixel Gamepad"
@@ -130,6 +130,12 @@ Advertised name: **Pixel Gamepad** (generic HID gamepad subclass `0x02`).
 - `BLUETOOTH_CONNECT`, `BLUETOOTH_ADVERTISE`, `BLUETOOTH_SCAN` (API 31+)
 - `FOREGROUND_SERVICE` + `FOREGROUND_SERVICE_CONNECTED_DEVICE`
 - `POST_NOTIFICATIONS` (API 33+)
+
+
+## Camera looks at the ground (Dragonwilds / cloud games)
+
+v1.4.1 packs stick **up → HID 0** (Chrome standard). Keep in-game **Invert Y / Vertical** **unchecked**.
+If look is still flipped after updating the app, toggle Invert Y once, or re-pair Bluetooth.
 
 ## Troubleshooting
 

@@ -31,10 +31,22 @@ class InputReportTest {
 
     @Test
     fun stickToAxis_invertY() {
+        // Optional flip helper still works when explicitly requested
         val up = InputReport.stickToAxis(-1f, invertY = true)
         val down = InputReport.stickToAxis(1f, invertY = true)
         assertEquals(InputReport.AXIS_MAX, up)
         assertEquals(0, down)
+    }
+
+    @Test
+    fun pack_stick_up_is_hid_zero() {
+        // UI screen-up is y=-1; must pack as 0 so Chrome axis reads -1 (look/move up)
+        val up = InputReport.pack(ControllerState(leftY = -1f, rightY = -1f))
+        assertEquals(0, up[4].toInt() and 0xFF) // LY
+        assertEquals(0, up[6].toInt() and 0xFF) // RY
+        val down = InputReport.pack(ControllerState(leftY = 1f, rightY = 1f))
+        assertEquals(InputReport.AXIS_MAX, down[4].toInt() and 0xFF)
+        assertEquals(InputReport.AXIS_MAX, down[6].toInt() and 0xFF)
     }
 
     @Test
@@ -101,9 +113,9 @@ class InputReportTest {
     fun pack_full_deflection_and_buttons() {
         val s = ControllerState(
             leftX = 1f,
-            leftY = -1f,
+            leftY = -1f, // UI up → HID 0
             rightX = -1f,
-            rightY = 1f,
+            rightY = 1f, // UI down → HID 255
             leftTrigger = 1f,
             rightTrigger = 0.5f,
             buttonA = true,
@@ -112,10 +124,10 @@ class InputReportTest {
         )
         val r = InputReport.pack(s)
 
-        assertEquals(InputReport.AXIS_MAX, r[3].toInt() and 0xFF)
-        assertEquals(InputReport.AXIS_MAX, r[4].toInt() and 0xFF)
-        assertEquals(0, r[5].toInt() and 0xFF)
-        assertEquals(0, r[6].toInt() and 0xFF)
+        assertEquals(InputReport.AXIS_MAX, r[3].toInt() and 0xFF) // LX right
+        assertEquals(0, r[4].toInt() and 0xFF) // LY up
+        assertEquals(0, r[5].toInt() and 0xFF) // RX left
+        assertEquals(InputReport.AXIS_MAX, r[6].toInt() and 0xFF) // RY down
         assertEquals(255, r[7].toInt() and 0xFF)
         assertEquals(127, r[8].toInt() and 0xFF)
         assertTrue((r[0].toInt() and InputReport.BTN_A) != 0)

@@ -90,7 +90,15 @@ object InputReport {
     const val DPAD_LEFT = 4
     const val DPAD_RIGHT = 8
 
-    /** Map normalized stick [-1,1] → uint8 center-biased. Y inverted for screen coords. */
+    /**
+     * Map normalized stick [-1,1] → uint8 center-biased (0..255, center 128).
+     *
+     * Convention matches HID + Chrome Gamepad API:
+     *   -1 → 0,  0 → 128,  +1 → 255
+     * Joystick UI uses screen coords (y+ = down). Passing y through unchanged means
+     * physical stick-up (y=-1) packs as 0 → browser axis -1 ("up"). Do **not** invert
+     * here or look cameras pitch into the floor (Dragonwilds / cloud games).
+     */
     fun stickToAxis(value: Float, invertY: Boolean = false): Int {
         val v = (if (invertY) -value else value).coerceIn(-1f, 1f)
         return when {
@@ -155,9 +163,10 @@ object InputReport {
         val buttons = buttonsMask(state)
         val hat = dpadToHat(state.dpad)
         val lx = stickToAxis(state.leftX)
-        val ly = stickToAxis(state.leftY, invertY = true)
+        // No Y invert: UI y=-1 (up) → 0, y=+1 (down) → 255 — Chrome/Xbox Cloud standard
+        val ly = stickToAxis(state.leftY)
         val rx = stickToAxis(state.rightX)
-        val ry = stickToAxis(state.rightY, invertY = true)
+        val ry = stickToAxis(state.rightY)
         val lt = triggerToByte(state.leftTrigger)
         val rt = triggerToByte(state.rightTrigger)
 
