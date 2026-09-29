@@ -4,7 +4,7 @@
 
 Turn an **Android 9+** phone into a **Bluetooth Xbox-style gamepad** with a neon cyberpunk skin. Your MacBook pairs it like a real controller — no Mac app required. Works with **Xbox Cloud Gaming** (`xbox.com/play`) via the browser Gamepad API.
 
-**v1.4.1** — Stick Y polarity fixed for Chrome/Xbox Cloud (look up = HID 0). **v1.4.0** — D-pad dual-report, cyberpunk neon UI, larger ABXY, equal sticks.
+**v1.4.3** — Right-stick look Y on HID Rx (Chrome `axes[3]`), L3/R3 no longer fire on stick drag, larger ABXY, L3↔D-pad gap, R3 unclipped. **v1.4.1** — Stick Y polarity (look up = HID 0). **v1.4.0** — D-pad dual-report + cyberpunk neon UI.
 
 ```
 Android App (Compose UI + HID Profile) ──Bluetooth──▶ Mac sees "Pixel Gamepad"
@@ -21,8 +21,10 @@ Typical latency: **~20–40 ms** over Bluetooth HID — playable for cloud gamin
 - HID report descriptor for a standard **gamepad** (8-bit dual sticks, LT/RT, 16 buttons, hat D-pad)
 - **D-pad dual-report**: hat switch **and** buttons 13–16 so Chrome / Xbox Cloud map Up/Down/Left/Right correctly
 - **Cyberpunk neon** UI (red / black / orange) — Jetpack Compose Xbox One geometry
-- Equal-size dual sticks; face buttons +20%; extra gap between A and right stick
-- Adaptive layout sized to the viewport so sticks match and the D-pad is never clipped
+- Equal-size dual sticks; face buttons +20% fatter; extra gap between A and right stick
+- **L3 / R3 independent** of stick drag (no accidental click while walking)
+- Right stick Y mapped to HID **Rx** so Chrome Gamepad API `axes[3]` gets look vertical
+- Adaptive layout: L3↔D-pad gap, larger D-pad, R3 fully on-screen
 - Advertises as **Pixel Gamepad** (generic HID) so macOS does not expect proprietary Xbox reports
 - Foreground service pumps reports at **~125 Hz**
 - One-shot **install script** via `adb`

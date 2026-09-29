@@ -29,6 +29,9 @@ import kotlin.math.min
 /**
  * Floating thumbstick. [onMove] receives normalized x,y in [-1,1] (y positive down).
  * Releases snap back to center.
+ *
+ * Stick click (L3/R3) is NOT tied to drag — use the separate L3/R3 pills.
+ * Previously onPress fired on every drag and spammed menus while walking.
  */
 @Composable
 fun Joystick(
@@ -37,7 +40,7 @@ fun Joystick(
     knobRatio: Float = 0.42f,
     active: Boolean = false,
     onMove: (x: Float, y: Float) -> Unit,
-    onPress: ((Boolean) -> Unit)? = null,
+    @Suppress("UNUSED_PARAMETER") onPress: ((Boolean) -> Unit)? = null,
 ) {
     var knob by remember { mutableStateOf(Offset.Zero) }
     val density = LocalDensity.current
@@ -54,7 +57,6 @@ fun Joystick(
 
                 detectDragGestures(
                     onDragStart = { offset ->
-                        onPress?.invoke(true)
                         val center = Offset(w / 2f, h / 2f)
                         val delta = offset - center
                         val clamped = clampToCircle(delta, travel)
@@ -64,12 +66,10 @@ fun Joystick(
                     onDragEnd = {
                         knob = Offset.Zero
                         onMove(0f, 0f)
-                        onPress?.invoke(false)
                     },
                     onDragCancel = {
                         knob = Offset.Zero
                         onMove(0f, 0f)
-                        onPress?.invoke(false)
                     },
                     onDrag = { change, dragAmount ->
                         change.consume()

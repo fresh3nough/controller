@@ -156,6 +156,27 @@ class InputReportTest {
     }
 
     @Test
+    fun descriptor_axes_map_to_standard_gamepad_indices() {
+        // Chrome sorts Generic Desktop axes by usage id:
+        // X Y Z Rx Ry Rz → axes[0..5] = LSX LSY RSX RSY LT RT
+        val d = HidDescriptor.DESCRIPTOR
+        val usages = mutableListOf<Int>()
+        var i = 0
+        while (i < d.size - 1) {
+            // Look for USAGE (0x09) under Generic Desktop for axis range 0x30..0x35
+            if (d[i] == 0x09.toByte()) {
+                val u = d[i + 1].toInt() and 0xFF
+                if (u in 0x30..0x35) usages.add(u)
+            }
+            i++
+        }
+        assertEquals(
+            listOf(0x30, 0x31, 0x32, 0x33, 0x34, 0x35), // X Y Z Rx Ry Rz
+            usages
+        )
+    }
+
+    @Test
     fun subclass_is_gamepad() {
         assertEquals(0x02.toByte(), HidDescriptor.SUBCLASS_GAMEPAD)
     }

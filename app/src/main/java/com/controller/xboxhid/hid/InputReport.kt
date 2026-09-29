@@ -156,7 +156,12 @@ object InputReport {
         return m
     }
 
-    /** Pack [ControllerState] into a [HidDescriptor.REPORT_SIZE]-byte report body. */
+    /**
+     * Pack [ControllerState] into a [HidDescriptor.REPORT_SIZE]-byte report body.
+     *
+     * Byte layout matches descriptor usages so Chrome axes[] land correctly:
+     *  [3]=X/LSX [4]=Y/LSY [5]=Z/RSX [6]=Rx/RSY [7]=Ry/LT [8]=Rz/RT
+     */
     fun pack(state: ControllerState, out: ByteArray = ByteArray(HidDescriptor.REPORT_SIZE)): ByteArray {
         require(out.size >= HidDescriptor.REPORT_SIZE) { "report buffer too small" }
 
@@ -173,12 +178,12 @@ object InputReport {
         out[0] = (buttons and 0xFF).toByte()
         out[1] = ((buttons ushr 8) and 0xFF).toByte()
         out[2] = (hat and 0x0F).toByte()
-        out[3] = lx.toByte()
-        out[4] = ly.toByte()
-        out[5] = rx.toByte()
-        out[6] = ry.toByte()
-        out[7] = lt.toByte()
-        out[8] = rt.toByte()
+        out[3] = lx.toByte() // X  → axes[0]
+        out[4] = ly.toByte() // Y  → axes[1]
+        out[5] = rx.toByte() // Z  → axes[2]
+        out[6] = ry.toByte() // Rx → axes[3] look Y
+        out[7] = lt.toByte() // Ry → axes[4]
+        out[8] = rt.toByte() // Rz → axes[5]
         return out
     }
 

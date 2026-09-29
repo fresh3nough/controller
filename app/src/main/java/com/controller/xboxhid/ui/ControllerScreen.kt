@@ -121,11 +121,12 @@ fun ControllerScreen(vm: ControllerViewModel) {
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(horizontal = 10.dp, vertical = 6.dp)
+                // Extra bottom inset so R3 clears the rounded shell clip
+                .padding(start = 10.dp, end = 10.dp, top = 6.dp, bottom = 14.dp)
         ) {
             StatusBar(vm, connected, advertising)
 
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(2.dp))
 
             Row(
                 Modifier
@@ -144,7 +145,7 @@ fun ControllerScreen(vm: ControllerViewModel) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.padding(top = 4.dp)
+                    modifier = Modifier.padding(top = 2.dp)
                 ) {
                     SmallPill("View", s.back, vm::setBack)
                     GuideButton(s.guide, vm::setGuide)
@@ -170,38 +171,39 @@ fun ControllerScreen(vm: ControllerViewModel) {
                 val availH = maxHeight
                 val availW = maxWidth
 
-                val stick = min(min(availH * 0.32f, availW * 0.22f), 148.dp)
-                val dpad = min(min(availH * 0.34f, availW * 0.24f), 148.dp)
-                // Face buttons +20% vs prior stick*0.40 / 52dp caps
-                val faceBtn = min(stick * 0.48f, 62.dp)
-                val faceSpan = min(stick * 0.56f, 72.dp)
-                // Extra space between face cluster (A) and RS (~18dp)
-                val faceToStickGap = 18.dp
+                // Compact sticks so RS+R3 fit above shell curve
+                val stick = min(min(availH * 0.26f, availW * 0.20f), 128.dp)
+                // D-pad ~+20% vs original 148dp
+                val dpad = min(min(availH * 0.34f, availW * 0.26f), 168.dp)
+                // ABXY +20% fatter
+                val faceBtn = min(stick * 0.55f, 70.dp)
+                val faceSpan = min(stick * 0.65f, 82.dp)
+                val faceToStickGap = 12.dp
+                // L3 pill ↔ D-pad (~15px)
+                val l3ToDpadGap = 15.dp
 
                 Row(
                     Modifier.fillMaxSize(),
-                    verticalAlignment = Alignment.CenterVertically,
+                    verticalAlignment = Alignment.Top,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // LEFT GRIP
+                    // LEFT GRIP: LS + L3, 15dp, larger D-pad
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.SpaceEvenly,
+                        verticalArrangement = Arrangement.Top,
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxHeight()
-                            .padding(start = 4.dp, bottom = 6.dp)
+                            .padding(start = 4.dp, top = 0.dp, bottom = 8.dp)
                     ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Joystick(
-                                diameter = stick,
-                                active = s.leftX != 0f || s.leftY != 0f,
-                                onMove = vm::setLeftStick,
-                                onPress = { pressed -> vm.setStickL(pressed) }
-                            )
-                            Spacer(Modifier.height(4.dp))
-                            SmallPill("L3", s.stickL, vm::setStickL)
-                        }
+                        Joystick(
+                            diameter = stick,
+                            active = s.leftX != 0f || s.leftY != 0f,
+                            onMove = vm::setLeftStick
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        SmallPill("L3", s.stickL, vm::setStickL)
+                        Spacer(Modifier.height(l3ToDpadGap))
                         Dpad(
                             size = dpad,
                             arm = dpad * 0.32f,
@@ -242,14 +244,14 @@ fun ControllerScreen(vm: ControllerViewModel) {
                         SmallPill("Share", s.share, vm::setShare)
                     }
 
-                    // RIGHT GRIP: face upper (moved up), gap, RS lower
+                    // RIGHT GRIP: ABXY top, RS+R3 bottom — SpaceBetween keeps R3 on-screen
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Top,
+                        verticalArrangement = Arrangement.SpaceBetween,
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxHeight()
-                            .padding(end = 4.dp, top = 4.dp, bottom = 6.dp)
+                            .padding(end = 4.dp, top = 0.dp, bottom = 8.dp)
                     ) {
                         FaceButtonCluster(
                             buttonSize = faceBtn,
@@ -263,16 +265,15 @@ fun ControllerScreen(vm: ControllerViewModel) {
                             onX = vm::setButtonX,
                             onY = vm::setButtonY
                         )
-                        Spacer(Modifier.height(faceToStickGap))
-                        Spacer(Modifier.weight(1f))
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            // small gap under face when SpaceBetween collapses
+                            Spacer(Modifier.height(faceToStickGap))
                             Joystick(
                                 diameter = stick,
                                 active = s.rightX != 0f || s.rightY != 0f,
-                                onMove = vm::setRightStick,
-                                onPress = { pressed -> vm.setStickR(pressed) }
+                                onMove = vm::setRightStick
                             )
-                            Spacer(Modifier.height(4.dp))
+                            Spacer(Modifier.height(6.dp))
                             SmallPill("R3", s.stickR, vm::setStickR)
                         }
                     }
