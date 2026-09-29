@@ -24,8 +24,8 @@ import com.controller.xboxhid.ui.theme.XboxGreen
 @Composable
 fun Dpad(
     modifier: Modifier = Modifier,
-    size: Dp = 130.dp,
-    arm: Dp = 42.dp,
+    size: Dp = 162.dp,
+    arm: Dp = 52.dp,
     up: Boolean,
     down: Boolean,
     left: Boolean,
@@ -123,7 +123,7 @@ private fun DpadArm(
         Text(
             text = label,
             color = if (pressed) Color.White else Color(0xFF888888),
-            fontSize = 14.sp,
+            fontSize = 18.sp,
             fontWeight = FontWeight.Bold
         )
     }

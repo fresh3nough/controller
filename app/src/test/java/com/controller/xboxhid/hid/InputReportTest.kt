@@ -11,26 +11,19 @@ class InputReportTest {
         val r = InputReport.packNeutral()
         assertEquals(HidDescriptor.REPORT_SIZE, r.size)
 
-        // sticks centered at 32768 = 0x8000 LE
-        assertEquals(0x00.toByte(), r[0])
-        assertEquals(0x80.toByte(), r[1])
-        assertEquals(0x00.toByte(), r[2])
-        assertEquals(0x80.toByte(), r[3])
-        assertEquals(0x00.toByte(), r[4])
-        assertEquals(0x80.toByte(), r[5])
-        assertEquals(0x00.toByte(), r[6])
-        assertEquals(0x80.toByte(), r[7])
-
-        // triggers zero
-        assertEquals(0.toByte(), r[8])
-        assertEquals(0.toByte(), r[9])
-
         // buttons zero
-        assertEquals(0.toByte(), r[10])
-        assertEquals(0.toByte(), r[11])
-
+        assertEquals(0.toByte(), r[0])
+        assertEquals(0.toByte(), r[1])
         // hat released = 8
-        assertEquals(8.toByte(), r[12])
+        assertEquals(8.toByte(), r[2])
+        // sticks centered at 128
+        assertEquals(128.toByte(), r[3])
+        assertEquals(128.toByte(), r[4])
+        assertEquals(128.toByte(), r[5])
+        assertEquals(128.toByte(), r[6])
+        // triggers zero
+        assertEquals(0.toByte(), r[7])
+        assertEquals(0.toByte(), r[8])
     }
 
     @Test
@@ -42,8 +35,7 @@ class InputReportTest {
 
     @Test
     fun stickToAxis_invertY() {
-        // positive screen-down should become low axis when inverted
-        val up = InputReport.stickToAxis(-1f, invertY = true) // stick forward
+        val up = InputReport.stickToAxis(-1f, invertY = true)
         val down = InputReport.stickToAxis(1f, invertY = true)
         assertEquals(InputReport.AXIS_MAX, up)
         assertEquals(0, down)
@@ -70,7 +62,7 @@ class InputReportTest {
     }
 
     @Test
-    fun buttonsMask_all_face_and_shoulders() {
+    fun buttonsMask_face_and_shoulders() {
         val s = ControllerState(
             buttonA = true,
             buttonB = true,
@@ -78,6 +70,8 @@ class InputReportTest {
             buttonY = true,
             bumperL = true,
             bumperR = true,
+            leftTrigger = 1f,
+            rightTrigger = 1f,
             back = true,
             start = true,
             stickL = true,
@@ -86,7 +80,13 @@ class InputReportTest {
             share = true,
         )
         val m = InputReport.buttonsMask(s)
-        assertEquals(0x0FFF, m and 0x0FFF)
+        assertEquals(
+            InputReport.BTN_A or InputReport.BTN_B or InputReport.BTN_X or InputReport.BTN_Y or
+                InputReport.BTN_L1 or InputReport.BTN_R1 or InputReport.BTN_L2 or InputReport.BTN_R2 or
+                InputReport.BTN_BACK or InputReport.BTN_START or InputReport.BTN_L3 or
+                InputReport.BTN_R3 or InputReport.BTN_GUIDE or InputReport.BTN_SHARE,
+            m
+        )
     }
 
     @Test
@@ -104,32 +104,38 @@ class InputReportTest {
         )
         val r = InputReport.pack(s)
 
-        fun u16(lo: Byte, hi: Byte) = (lo.toInt() and 0xFF) or ((hi.toInt() and 0xFF) shl 8)
-
-        assertEquals(InputReport.AXIS_MAX, u16(r[0], r[1]))
-        assertEquals(InputReport.AXIS_MAX, u16(r[2], r[3])) // inverted Y up
-        assertEquals(0, u16(r[4], r[5]))
-        assertEquals(0, u16(r[6], r[7])) // inverted Y down
-        assertEquals(255, r[8].toInt() and 0xFF)
-        assertEquals(127, r[9].toInt() and 0xFF)
-        assertEquals(InputReport.BTN_A, r[10].toInt() and 0xFF and InputReport.BTN_A)
-        assertTrue((r[10].toInt() and InputReport.BTN_R1) != 0)
-        assertEquals(0, r[12].toInt() and 0x0F) // hat north
+        assertEquals(InputReport.AXIS_MAX, r[3].toInt() and 0xFF) // LX
+        assertEquals(InputReport.AXIS_MAX, r[4].toInt() and 0xFF) // LY inverted up
+        assertEquals(0, r[5].toInt() and 0xFF) // RX
+        assertEquals(0, r[6].toInt() and 0xFF) // RY inverted down
+        assertEquals(255, r[7].toInt() and 0xFF)
+        assertEquals(127, r[8].toInt() and 0xFF)
+        assertTrue((r[0].toInt() and InputReport.BTN_A) != 0)
+        assertTrue((r[0].toInt() and InputReport.BTN_R1) != 0)
+        assertTrue((r[0].toInt() and InputReport.BTN_L2) != 0) // LT digital
+        assertEquals(0, r[2].toInt() and 0x0F) // hat north
     }
 
     @Test
     fun descriptor_is_well_formed() {
         val d = HidDescriptor.DESCRIPTOR
         assertTrue(d.size > 20)
-        // starts with USAGE_PAGE Generic Desktop + USAGE Game Pad + COLLECTION
         assertEquals(0x05.toByte(), d[0])
         assertEquals(0x01.toByte(), d[1])
         assertEquals(0x09.toByte(), d[2])
         assertEquals(0x05.toByte(), d[3])
         assertEquals(0xA1.toByte(), d[4])
-        // ends with END_COLLECTION
         assertEquals(0xC0.toByte(), d.last())
-        // contains report id
-        assertTrue(d.toList().windowed(2).any { it[0] == 0x85.toByte() && it[1] == HidDescriptor.REPORT_ID })
+        assertTrue(
+            d.toList().windowed(2).any {
+                it[0] == 0x85.toByte() && it[1] == HidDescriptor.REPORT_ID
+            }
+        )
+    }
+
+    @Test
+    fun subclass_is_gamepad() {
+        // AOSP BluetoothHidDevice.SUBCLASS2_GAMEPAD == 2
+        assertEquals(0x02.toByte(), HidDescriptor.SUBCLASS_GAMEPAD)
     }
 }

@@ -14,8 +14,9 @@ Typical latency: **~20–40 ms** over Bluetooth HID — playable for cloud gamin
 ## Features
 
 - Bluetooth **HID Device** mode (`BluetoothHidDevice`) — Android acts as the controller
-- HID report descriptor for a standard **gamepad** (dual sticks, LT/RT, 12 buttons, hat D-pad)
-- **Xbox One–style** on-screen UI (Jetpack Compose): sticks, A/B/X/Y, LB/RB, LT/RT, D-pad, View/Menu/Guide
+- HID report descriptor for a standard **gamepad** (8-bit dual sticks, LT/RT, 16 buttons, hat D-pad)
+- **Xbox One geometry** UI (Jetpack Compose): left stick upper / large D-pad lower, face buttons upper / right stick lower, LB/RB + LT/RT, View/Menu/Guide/Share
+- Advertises as **Pixel Gamepad** (generic HID) so macOS does not expect proprietary Xbox reports
 - Foreground service pumps reports at **~125 Hz**
 - One-shot **install script** via `adb`
 
@@ -74,12 +75,12 @@ controller/
 ├── app/src/main/java/com/controller/xboxhid/
 │   ├── MainActivity.kt              # Permissions + Compose host
 │   ├── hid/
-│   │   ├── HidDescriptor.kt         # Xbox-style HID descriptor
-│   │   ├── InputReport.kt           # Pack sticks/buttons → 15-byte report
+│   │   ├── HidDescriptor.kt         # Standard gamepad HID descriptor
+│   │   ├── InputReport.kt           # Pack sticks/buttons → 9-byte report
 │   │   ├── HidDeviceManager.kt      # BluetoothHidDevice register/connect/send
 │   │   └── HidControllerService.kt  # Foreground service + 125 Hz pump
 │   └── ui/
-│       ├── ControllerScreen.kt      # Xbox One layout
+│       ├── ControllerScreen.kt      # Xbox One geometry layout
 │       ├── ControllerViewModel.kt
 │       ├── components/              # Joystick, face buttons, D-pad, triggers
 │       └── theme/
@@ -88,19 +89,20 @@ controller/
 └── tests/smoke_test.sh              # Unit tests + APK + device checks
 ```
 
-## HID report map
+## HID report map (report id 1)
 
-| Bytes | Field |
-|------:|-------|
-| 0–1 | Left stick X (uint16 LE, center 32768) |
-| 2–3 | Left stick Y |
-| 4–5 | Right stick X |
-| 6–7 | Right stick Y |
-| 8 | LT (0–255) |
-| 9 | RT (0–255) |
-| 10–11 | Buttons bitfield (A B X Y L1 R1 Back Start L3 R3 Guide Share) |
-| 12 | Hat / D-pad (0=N … 7=NW, 8=release) |
-| 13–14 | Reserved |
+| Byte | Field |
+|-----:|-------|
+| 0–1 | Buttons bitfield (A B X Y L1 R1 L2 R2 / Back Start L3 R3 Guide Share) |
+| 2 | Hat / D-pad (0=N … 7=NW, 8=release) |
+| 3 | Left stick X (uint8, center 128) |
+| 4 | Left stick Y |
+| 5 | Right stick X |
+| 6 | Right stick Y |
+| 7 | LT (0–255) |
+| 8 | RT (0–255) |
+
+Advertised name: **Pixel Gamepad** (generic HID gamepad subclass `0x02`).
 
 ## Development
 
@@ -127,6 +129,9 @@ controller/
 | Symptom | Fix |
 |---------|-----|
 | `registerApp returned false` | Force-stop other HID/gamepad apps; toggle Bluetooth; reboot phone |
+| Mac pairs but **no input** on gamepad-tester / Xbox Cloud | 1) On Mac: forget the device  2) On phone: Disconnect then Connect  3) Re-pair as **Pixel Gamepad** (not old "Xbox Controller")  4) Hard-refresh gamepad-tester |
+| Mac shows phone as audio/headset | Unpair both sides; phone must advertise HID gamepad SDP before pairing |
+| Still nothing after re-pair | `adb logcat -s HidDeviceManager:I HidDeviceService:V` — look for `report sent` and `onConnectionStateChanged CONNECTED` |
 | Mac doesn’t see device | Phone must show **ADVERTISING**; put Mac Bluetooth UI in pairing mode; forget old pairings |
 | Gamepad tester sees pad but no input | Ensure status is **CONNECTED**; move sticks — reports only flow while connected |
 | Install unauthorized | `adb devices` → accept RSA fingerprint on phone |

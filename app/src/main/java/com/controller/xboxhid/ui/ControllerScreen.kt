@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -46,6 +47,17 @@ import com.controller.xboxhid.ui.theme.XboxBodyLight
 import com.controller.xboxhid.ui.theme.XboxGreen
 import com.controller.xboxhid.ui.theme.XboxPanel
 
+/**
+ * Xbox One controller geometry (landscape phone):
+ *
+ *   LT/LB                 View  [X]  Menu                 RT/RB
+ *
+ *      LS  (upper)                           Y
+ *                                      X         B
+ *      DPAD (lower, large)                     A
+ *                           Share
+ *                                    RS (lower, inset)
+ */
 @Composable
 fun ControllerScreen(vm: ControllerViewModel) {
     val s = vm.uiState
@@ -62,11 +74,11 @@ fun ControllerScreen(vm: ControllerViewModel) {
                 )
             )
     ) {
-        // Subtle controller body silhouette
+        // Controller body silhouette
         Box(
             Modifier
-                .fillMaxWidth(0.92f)
-                .fillMaxHeight(0.88f)
+                .fillMaxWidth(0.94f)
+                .fillMaxHeight(0.90f)
                 .align(Alignment.Center)
                 .shadow(16.dp, RoundedCornerShape(48.dp))
                 .clip(RoundedCornerShape(48.dp))
@@ -81,18 +93,17 @@ fun ControllerScreen(vm: ControllerViewModel) {
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(horizontal = 18.dp, vertical = 10.dp)
+                .padding(horizontal = 14.dp, vertical = 8.dp)
         ) {
-            // Top status bar
             StatusBar(vm, connected, advertising)
 
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(2.dp))
 
-            // Shoulders / triggers row
+            // Shoulders / triggers + center chrome (View / Guide / Menu)
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp),
+                    .padding(horizontal = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Top
             ) {
@@ -103,10 +114,10 @@ fun ControllerScreen(vm: ControllerViewModel) {
                     onBumper = vm::setBumperL,
                     onTrigger = vm::setLeftTrigger
                 )
-                // Menu cluster under guide
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                    modifier = Modifier.padding(top = 6.dp)
                 ) {
                     SmallPill("View", s.back, vm::setBack)
                     GuideButton(s.guide, vm::setGuide)
@@ -121,32 +132,46 @@ fun ControllerScreen(vm: ControllerViewModel) {
                 )
             }
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(4.dp))
 
-            // Main controls
+            // Main pad — Xbox One diamond layout
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .weight(1f),
+                    .weight(1f)
+                    .padding(horizontal = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceEvenly
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Left: stick + dpad
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(18.dp)
+                // LEFT GRIP ------------------------------------------------
+                // Xbox One: left stick UPPER, D-pad LOWER (and large)
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .padding(start = 6.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Joystick(
-                        diameter = 150.dp,
-                        active = s.leftX != 0f || s.leftY != 0f,
-                        onMove = vm::setLeftStick,
-                        onPress = null
-                    )
-                    // Click stick via long-press center handled simply with a small L3 chip
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                        modifier = Modifier.fillMaxHeight()
+                    ) {
+                        Spacer(Modifier.weight(0.08f))
+                        // Left stick (upper)
+                        Joystick(
+                            diameter = 148.dp,
+                            active = s.leftX != 0f || s.leftY != 0f,
+                            onMove = vm::setLeftStick,
+                            onPress = { pressed -> vm.setStickL(pressed) }
+                        )
                         SmallPill("L3", s.stickL, vm::setStickL)
+
+                        Spacer(Modifier.weight(0.06f))
+
+                        // D-pad (lower) — 35% larger than previous 120dp → 162dp
                         Dpad(
-                            size = 120.dp,
+                            size = 162.dp,
                             up = s.dpad and InputReport.DPAD_UP != 0,
                             down = s.dpad and InputReport.DPAD_DOWN != 0,
                             left = s.dpad and InputReport.DPAD_LEFT != 0,
@@ -156,49 +181,80 @@ fun ControllerScreen(vm: ControllerViewModel) {
                             onLeft = vm::pressDpadLeft,
                             onRight = vm::pressDpadRight
                         )
+                        Spacer(Modifier.weight(0.12f))
                     }
                 }
 
-                // Center brand
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                // CENTER BRAND --------------------------------------------
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier
+                        .width(96.dp)
+                        .fillMaxHeight()
+                ) {
                     Text(
                         "XBOX",
                         color = XboxGreen.copy(alpha = 0.9f),
                         fontWeight = FontWeight.Black,
-                        fontSize = 18.sp,
-                        letterSpacing = 4.sp
+                        fontSize = 16.sp,
+                        letterSpacing = 3.sp
                     )
                     Text(
-                        "CLOUD READY",
+                        "ONE",
                         color = TextMuted,
-                        fontSize = 10.sp,
-                        letterSpacing = 2.sp
+                        fontSize = 11.sp,
+                        letterSpacing = 3.sp,
+                        fontWeight = FontWeight.SemiBold
                     )
-                    Spacer(Modifier.height(12.dp))
+                    Spacer(Modifier.height(16.dp))
                     SmallPill("Share", s.share, vm::setShare)
                 }
 
-                // Right: face buttons + right stick
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(18.dp)
+                // RIGHT GRIP ----------------------------------------------
+                // Xbox One: face buttons UPPER, right stick LOWER (slightly inset)
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .padding(end = 6.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    FaceButtonCluster(
-                        aPressed = s.buttonA,
-                        bPressed = s.buttonB,
-                        xPressed = s.buttonX,
-                        yPressed = s.buttonY,
-                        onA = vm::setButtonA,
-                        onB = vm::setButtonB,
-                        onX = vm::setButtonX,
-                        onY = vm::setButtonY
-                    )
-                    Joystick(
-                        diameter = 150.dp,
-                        active = s.rightX != 0f || s.rightY != 0f,
-                        onMove = vm::setRightStick
-                    )
-                    SmallPill("R3", s.stickR, vm::setStickR)
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                        modifier = Modifier.fillMaxHeight()
+                    ) {
+                        Spacer(Modifier.weight(0.08f))
+                        // Face buttons (upper)
+                        FaceButtonCluster(
+                            aPressed = s.buttonA,
+                            bPressed = s.buttonB,
+                            xPressed = s.buttonX,
+                            yPressed = s.buttonY,
+                            onA = vm::setButtonA,
+                            onB = vm::setButtonB,
+                            onX = vm::setButtonX,
+                            onY = vm::setButtonY
+                        )
+
+                        Spacer(Modifier.weight(0.08f))
+
+                        // Right stick (lower, nudged slightly toward center like real pad)
+                        Box(Modifier.offset(x = (-12).dp)) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Joystick(
+                                    diameter = 148.dp,
+                                    active = s.rightX != 0f || s.rightY != 0f,
+                                    onMove = vm::setRightStick,
+                                    onPress = { pressed -> vm.setStickR(pressed) }
+                                )
+                                Spacer(Modifier.height(6.dp))
+                                SmallPill("R3", s.stickR, vm::setStickR)
+                            }
+                        }
+                        Spacer(Modifier.weight(0.10f))
+                    }
                 }
             }
         }
@@ -285,7 +341,6 @@ private fun GuideButton(pressed: Boolean, onPress: (Boolean) -> Unit) {
                 )
             }
     ) {
-        // Xbox-like X glyph
         Text(
             "X",
             color = if (pressed) XboxGreen else Color.White,

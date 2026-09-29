@@ -38,9 +38,9 @@ class HidDeviceManager(
 
     companion object {
         private const val TAG = "HidDeviceManager"
-        private const val APP_NAME = "Xbox Controller"
-        private const val APP_DESCRIPTION = "Bluetooth Xbox-style HID Gamepad"
-        private const val APP_PROVIDER = "controller"
+        private val APP_NAME = HidDescriptor.APP_NAME
+        private val APP_DESCRIPTION = HidDescriptor.APP_DESCRIPTION
+        private val APP_PROVIDER = HidDescriptor.APP_PROVIDER
         private val SUBCLASS: Byte = HidDescriptor.SUBCLASS_GAMEPAD
     }
 
@@ -235,11 +235,35 @@ class HidDeviceManager(
         val hid = hidDevice.get() ?: return
         val bt = adapter ?: return
         try {
+            // Become discoverable briefly so macOS can (re)pair with the new SDP record
+            runCatching {
+                // 60s discoverable — may require user confirmation on some OEMs
+                val method = bt.javaClass.getMethod(
+                    "setScanMode",
+                    Int::class.javaPrimitiveType,
+                    Int::class.javaPrimitiveType
+                )
+                method.invoke(bt, BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE, 60)
+            }
+
             val bonded = bt.bondedDevices ?: emptySet()
-            for (device in bonded) {
-                // Prefer connecting; host can also initiate from Bluetooth settings
-                Log.i(TAG, "Attempting connect to bonded ${device.name} ${device.address}")
-                hid.connect(device)
+            // Prefer computers / Mac hosts. Skip audio headsets etc.
+            val hosts = bonded.filter { device ->
+                val cls = device.bluetoothClass ?: return@filter true
+                val major = cls.majorDeviceClass
+                major == android.bluetooth.BluetoothClass.Device.Major.COMPUTER ||
+                    major == android.bluetooth.BluetoothClass.Device.Major.UNCATEGORIZED ||
+                    major == 0
+            }.ifEmpty { bonded.toList() }
+
+            for (device in hosts) {
+                Log.i(
+                    TAG,
+                    "Attempting HID connect to bonded ${device.name} ${device.address} " +
+                        "class=${device.bluetoothClass}"
+                )
+                val ok = hid.connect(device)
+                Log.i(TAG, "hid.connect(${device.address}) -> $ok")
             }
         } catch (e: SecurityException) {
             Log.w(TAG, "Missing BLUETOOTH_CONNECT for bonded scan", e)
