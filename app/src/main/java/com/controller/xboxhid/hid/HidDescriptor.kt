@@ -70,14 +70,15 @@ object HidDescriptor {
         0x81, 0x02,
 
         // ----- Hat switch (D-Pad) -----
+        // Logical max 8 so released (8) is in-range for macOS/Chrome parsers.
         // USAGE_PAGE (Generic Desktop)
         0x05, 0x01,
         // USAGE (Hat switch)
         0x09, 0x39,
         // LOGICAL_MINIMUM (0)
         0x15, 0x00,
-        // LOGICAL_MAXIMUM (7)
-        0x25, 0x07,
+        // LOGICAL_MAXIMUM (8)  — 0..7 directions, 8 = neutral/released
+        0x25, 0x08,
         // PHYSICAL_MINIMUM (0)
         0x35, 0x00,
         // PHYSICAL_MAXIMUM (315)

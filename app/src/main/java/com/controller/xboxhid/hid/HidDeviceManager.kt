@@ -54,7 +54,10 @@ class HidDeviceManager(
     private val registered = AtomicBoolean(false)
     private val reportBuffer = ByteArray(HidDescriptor.REPORT_SIZE)
     private val stateLock = Any()
+    @Volatile private var lastPacked: ByteArray? = null
     @Volatile private var connectionState = ConnectionState.IDLE
+    @Volatile private var sendOk = 0L
+    @Volatile private var sendFail = 0L
 
     private val profileListener = object : BluetoothProfile.ServiceListener {
         override fun onServiceConnected(profile: Int, proxy: BluetoothProfile) {
@@ -110,7 +113,11 @@ class HidDeviceManager(
 
         override fun onGetReport(device: BluetoothDevice?, type: Byte, id: Byte, bufferSize: Int) {
             if (type == BluetoothHidDevice.REPORT_TYPE_INPUT && id == HidDescriptor.REPORT_ID) {
-                hidDevice.get()?.replyReport(device, type, id, InputReport.packNeutral())
+                // Reply with the latest packed state (or neutral) so host polls work.
+                val data = synchronized(stateLock) {
+                    lastPacked?.copyOf() ?: InputReport.packNeutral()
+                }
+                hidDevice.get()?.replyReport(device, type, id, data)
             }
         }
 
@@ -192,8 +199,22 @@ class HidDeviceManager(
         val hid = hidDevice.get() ?: return false
         val host = hostDevice.get() ?: return false
         return try {
-            hid.sendReport(host, HidDescriptor.REPORT_ID.toInt() and 0xFF, data)
+            val ok = hid.sendReport(host, HidDescriptor.REPORT_ID.toInt() and 0xFF, data)
+            if (ok) {
+                lastPacked = data.copyOf()
+                val n = ++sendOk
+                if (n == 1L || n % 500L == 0L) {
+                    Log.i(TAG, "sendReport ok=$n fail=$sendFail len=${data.size} host=${host.address}")
+                }
+            } else {
+                val n = ++sendFail
+                if (n <= 5L || n % 100L == 0L) {
+                    Log.w(TAG, "sendReport returned false ok=$sendOk fail=$n")
+                }
+            }
+            ok
         } catch (e: Exception) {
+            sendFail++
             Log.w(TAG, "sendReport failed", e)
             false
         }

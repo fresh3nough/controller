@@ -169,7 +169,7 @@ class HidControllerService : Service(), HidDeviceManager.Listener {
         const val ACTION_START = "com.controller.xboxhid.START"
         const val ACTION_STOP = "com.controller.xboxhid.STOP"
         // Bump so caches/logs make the descriptor revision obvious
-        const val HID_PROTOCOL_REV = "gamepad-v2-8bit"
+        const val HID_PROTOCOL_REV = "gamepad-v1.3-8bit-ui"
 
         fun start(context: Context) {
             val i = Intent(context, HidControllerService::class.java).setAction(ACTION_START)

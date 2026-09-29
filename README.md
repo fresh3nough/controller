@@ -3,7 +3,7 @@
 Turn an **Android 9+** phone into a **Bluetooth Xbox-style gamepad**. Your MacBook (or any host) pairs it like a real controller — no Mac app required. Works with **Xbox Cloud Gaming** (`xbox.com/play`) via the browser Gamepad API.
 
 ```
-Android App (Compose UI + HID Profile) ──Bluetooth──▶ Mac sees "Xbox Controller"
+Android App (Compose UI + HID Profile) ──Bluetooth──▶ Mac sees "Pixel Gamepad"
                                                           │
                                                           ▼
                                               Chrome / Safari → xbox.com/play
@@ -15,7 +15,8 @@ Typical latency: **~20–40 ms** over Bluetooth HID — playable for cloud gamin
 
 - Bluetooth **HID Device** mode (`BluetoothHidDevice`) — Android acts as the controller
 - HID report descriptor for a standard **gamepad** (8-bit dual sticks, LT/RT, 16 buttons, hat D-pad)
-- **Xbox One geometry** UI (Jetpack Compose): left stick upper / large D-pad lower, face buttons upper / right stick lower, LB/RB + LT/RT, View/Menu/Guide/Share
+- **Xbox One geometry** UI (Jetpack Compose): equal-size dual sticks, left stick upper / D-pad lower, face buttons upper / right stick lower, LB/RB + LT/RT, View/Menu/Guide/Share
+- Adaptive layout sized to the viewport so sticks match and the D-pad is never clipped
 - Advertises as **Pixel Gamepad** (generic HID) so macOS does not expect proprietary Xbox reports
 - Foreground service pumps reports at **~125 Hz**
 - One-shot **install script** via `adb`
@@ -56,7 +57,7 @@ cd controller
 ### On the MacBook
 
 1. **System Settings → Bluetooth**
-2. Select **Xbox Controller** (or the phone’s advertised name) → **Connect**
+2. Select **Pixel Gamepad** / the phone name → **Connect**
 3. Open [https://www.xbox.com/play](https://www.xbox.com/play) or [https://gamepad-tester.com](https://gamepad-tester.com)
 4. Confirm the gamepad shows up, then play
 
@@ -140,3 +141,19 @@ Advertised name: **Pixel Gamepad** (generic HID gamepad subclass `0x02`).
 ## License
 
 MIT
+
+
+## Troubleshooting (macOS)
+
+If Bluetooth shows the phone connected but [gamepad-tester.com](https://gamepad-tester.com) / Xbox Cloud Gaming show no pads:
+
+1. On the phone, status must be **CONNECTED** (not only Advertising).
+2. Forget the device on the Mac (**System Settings → Bluetooth → ℹ → Forget**), force-stop the app, reopen, tap **Connect**, then re-pair as **Pixel Gamepad**.
+3. HID report descriptor changes only take effect after a full re-pair (SDP is cached).
+4. Confirm reports on the Mac: a HID monitor should see 10-byte reports (`01 …`) at ~125 Hz while the phone is connected.
+5. Wireless ADB: on the phone enable **Wireless debugging → Pair device with pairing code**, then on the Mac:
+
+```bash
+adb pair <phone-ip>:<pair-port>
+adb connect <phone-ip>:<connect-port>
+```

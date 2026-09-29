@@ -24,8 +24,8 @@ import com.controller.xboxhid.ui.theme.XboxGreen
 @Composable
 fun Dpad(
     modifier: Modifier = Modifier,
-    size: Dp = 162.dp,
-    arm: Dp = 52.dp,
+    size: Dp = 148.dp,
+    arm: Dp = 48.dp,
     up: Boolean,
     down: Boolean,
     left: Boolean,

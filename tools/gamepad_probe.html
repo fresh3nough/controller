@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Pixel Gamepad Probe</title>
+  <style>
+    body { font-family: ui-sans-serif, system-ui; background: #111; color: #eee; padding: 24px; }
+    h1 { color: #3ddc84; }
+    .pad { border: 1px solid #333; border-radius: 12px; padding: 16px; margin: 12px 0; background: #1a1a1a; }
+    .ok { color: #3ddc84; } .bad { color: #e74c3c; }
+    pre { white-space: pre-wrap; word-break: break-all; background: #000; padding: 12px; border-radius: 8px; }
+    button { font-size: 16px; padding: 10px 18px; margin-right: 8px; border-radius: 8px; border: 0; cursor: pointer; }
+    #start { background: #3ddc84; color: #000; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <h1>Pixel Gamepad Probe</h1>
+  <p>Press any controller button after clicking Start (browser gesture required).</p>
+  <button id="start">Start listening</button>
+  <button onclick="location.reload()">Reload</button>
+  <div id="status" class="bad">Idle — click Start</div>
+  <div id="pads"></div>
+  <h3>Log</h3>
+  <pre id="log"></pre>
+  <script>
+    const logEl = document.getElementById('log');
+    const status = document.getElementById('status');
+    const padsEl = document.getElementById('pads');
+    function log(m) {
+      logEl.textContent = new Date().toISOString().slice(11,19) + ' ' + m + '\n' + logEl.textContent.slice(0, 4000);
+    }
+    let running = false;
+    window.addEventListener('gamepadconnected', e => {
+      log('gamepadconnected: ' + e.gamepad.id + ' index=' + e.gamepad.index);
+      status.textContent = 'Gamepad connected: ' + e.gamepad.id;
+      status.className = 'ok';
+    });
+    window.addEventListener('gamepaddisconnected', e => {
+      log('gamepaddisconnected: ' + e.gamepad.id);
+    });
+    function render() {
+      if (!running) return;
+      const gps = navigator.getGamepads ? navigator.getGamepads() : [];
+      let html = '';
+      let n = 0;
+      for (let i = 0; i < gps.length; i++) {
+        const g = gps[i];
+        if (!g) continue;
+        n++;
+        const pressed = [...g.buttons].map((b, idx) => b.pressed ? idx : null).filter(x => x !== null);
+        const axes = [...g.axes].map(a => a.toFixed(2)).join(', ');
+        html += `<div class="pad"><strong>#${g.index} ${g.id}</strong><br/>mapping=${g.mapping} buttons=${g.buttons.length} axes=${g.axes.length}<br/>pressed=[${pressed.join(',')}]<br/>axes=[${axes}]</div>`;
+      }
+      if (n === 0) {
+        html = '<div class="pad bad">No gamepads in navigator.getGamepads() yet. Press A on the phone.</div>';
+        status.textContent = 'Listening — no pads seen';
+        status.className = 'bad';
+      } else {
+        status.textContent = n + ' gamepad(s) visible';
+        status.className = 'ok';
+      }
+      padsEl.innerHTML = html;
+      requestAnimationFrame(render);
+    }
+    document.getElementById('start').onclick = () => {
+      running = true;
+      status.textContent = 'Listening…';
+      log('start; initial getGamepads count=' + [...navigator.getGamepads()].filter(Boolean).length);
+      render();
+    };
+  </script>
+</body>
+</html>
