@@ -51,7 +51,7 @@ fun BumperButton(
             .size(width, height)
             .clip(shape)
             .background(if (pressed) BumperActive else Bumper)
-            .border(1.dp, if (pressed) XboxGreen else Color(0xFF555555), shape)
+            .border(1.dp, if (pressed) XboxGreen else Color(0xFF4A2030), shape)
             .pointerInput(Unit) {
                 detectTapGestures(
                     onPress = {

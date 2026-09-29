@@ -1,6 +1,7 @@
 package com.controller.xboxhid.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
@@ -18,8 +19,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.controller.xboxhid.ui.theme.DpadActive
 import com.controller.xboxhid.ui.theme.DpadFill
-import com.controller.xboxhid.ui.theme.XboxGreen
+import com.controller.xboxhid.ui.theme.NeonOrange
+import com.controller.xboxhid.ui.theme.NeonRed
 
 @Composable
 fun Dpad(
@@ -58,7 +61,8 @@ fun Dpad(
             Modifier
                 .size(arm * 0.7f)
                 .clip(RoundedCornerShape(50))
-                .background(Color(0xFF1A1A1A))
+                .background(Color(0xFF0C0C12))
+                .border(1.dp, NeonRed.copy(alpha = 0.4f), RoundedCornerShape(50))
         )
 
         DpadArm(
@@ -106,7 +110,7 @@ private fun DpadArm(
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
-            .background(if (pressed) XboxGreen.copy(alpha = 0.55f) else Color.Transparent)
+            .background(if (pressed) DpadActive.copy(alpha = 0.65f) else Color.Transparent)
             .pointerInput(Unit) {
                 detectTapGestures(
                     onPress = {
@@ -122,7 +126,7 @@ private fun DpadArm(
     ) {
         Text(
             text = label,
-            color = if (pressed) Color.White else Color(0xFF888888),
+            color = if (pressed) Color.White else NeonOrange.copy(alpha = 0.75f),
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold
         )

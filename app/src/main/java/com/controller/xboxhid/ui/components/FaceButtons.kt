@@ -103,8 +103,8 @@ fun FaceButton(
                 )
             )
             .border(
-                width = 2.dp,
-                color = color.copy(alpha = if (pressed) 1f else 0.55f),
+                width = if (pressed) 3.dp else 2.dp,
+                color = color.copy(alpha = if (pressed) 1f else 0.75f),
                 shape = CircleShape
             )
             .pointerInput(Unit) {

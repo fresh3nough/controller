@@ -41,24 +41,20 @@ import com.controller.xboxhid.ui.components.FaceButtonCluster
 import com.controller.xboxhid.ui.components.Joystick
 import com.controller.xboxhid.ui.components.ShoulderColumn
 import com.controller.xboxhid.ui.theme.GuideRing
+import com.controller.xboxhid.ui.theme.NeonBlack
+import com.controller.xboxhid.ui.theme.NeonBody
+import com.controller.xboxhid.ui.theme.NeonBodyLight
+import com.controller.xboxhid.ui.theme.NeonCyan
+import com.controller.xboxhid.ui.theme.NeonEdge
+import com.controller.xboxhid.ui.theme.NeonOrange
+import com.controller.xboxhid.ui.theme.NeonPanel
+import com.controller.xboxhid.ui.theme.NeonRed
 import com.controller.xboxhid.ui.theme.TextMuted
 import com.controller.xboxhid.ui.theme.TextPrimary
-import com.controller.xboxhid.ui.theme.XboxBody
-import com.controller.xboxhid.ui.theme.XboxBodyLight
-import com.controller.xboxhid.ui.theme.XboxGreen
-import com.controller.xboxhid.ui.theme.XboxPanel
 
 /**
- * Xbox One controller geometry (landscape phone), sized to the available
- * viewport so both thumbsticks stay equal and nothing is clipped.
- *
- *   LT/LB                 View  [X]  Menu                 RT/RB
- *
- *      LS (upper)                         Y
- *                                   X         B
- *      DPAD (lower)                         A
- *                           Share
- *                                         RS (lower, same size as LS)
+ * Cyberpunk Xbox One geometry (landscape phone).
+ * LS and RS share diameter; face buttons +20%; extra gap between A and RS.
  */
 @Composable
 fun ControllerScreen(vm: ControllerViewModel) {
@@ -72,24 +68,54 @@ fun ControllerScreen(vm: ControllerViewModel) {
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    listOf(Color(0xFF0B0B0B), XboxBody, Color(0xFF101010))
+                    listOf(NeonBlack, NeonBody, Color(0xFF120808))
                 )
             )
     ) {
+        // Soft neon glow strips
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(2.dp)
+                .align(Alignment.TopCenter)
+                .background(
+                    Brush.horizontalGradient(
+                        listOf(Color.Transparent, NeonRed.copy(alpha = 0.7f), NeonOrange.copy(alpha = 0.8f), Color.Transparent)
+                    )
+                )
+        )
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(2.dp)
+                .align(Alignment.BottomCenter)
+                .background(
+                    Brush.horizontalGradient(
+                        listOf(Color.Transparent, NeonOrange.copy(alpha = 0.6f), NeonRed.copy(alpha = 0.7f), Color.Transparent)
+                    )
+                )
+        )
+
         // Controller body silhouette
         Box(
             Modifier
                 .fillMaxWidth(0.96f)
                 .fillMaxHeight(0.94f)
                 .align(Alignment.Center)
-                .shadow(16.dp, RoundedCornerShape(40.dp))
+                .shadow(20.dp, RoundedCornerShape(40.dp), ambientColor = NeonRed.copy(alpha = 0.35f), spotColor = NeonOrange.copy(alpha = 0.25f))
                 .clip(RoundedCornerShape(40.dp))
                 .background(
                     Brush.radialGradient(
-                        colors = listOf(XboxBodyLight, XboxBody, Color(0xFF0A0A0A))
+                        colors = listOf(NeonBodyLight, NeonBody, NeonBlack)
                     )
                 )
-                .border(1.dp, Color(0xFF2A2A2A), RoundedCornerShape(40.dp))
+                .border(
+                    width = 1.5.dp,
+                    brush = Brush.linearGradient(
+                        listOf(NeonRed.copy(alpha = 0.55f), NeonEdge, NeonOrange.copy(alpha = 0.45f))
+                    ),
+                    shape = RoundedCornerShape(40.dp)
+                )
         )
 
         Column(
@@ -101,7 +127,6 @@ fun ControllerScreen(vm: ControllerViewModel) {
 
             Spacer(Modifier.height(4.dp))
 
-            // Shoulders / triggers + center chrome (View / Guide / Menu)
             Row(
                 Modifier
                     .fillMaxWidth()
@@ -136,7 +161,6 @@ fun ControllerScreen(vm: ControllerViewModel) {
 
             Spacer(Modifier.height(2.dp))
 
-            // Main pad — sizes derived from available height so sticks match
             BoxWithConstraints(
                 Modifier
                     .fillMaxWidth()
@@ -146,18 +170,20 @@ fun ControllerScreen(vm: ControllerViewModel) {
                 val availH = maxHeight
                 val availW = maxWidth
 
-                // Stick diameter is shared: LS == RS. Cap so dpad + stick fit without clip.
-                val stick = min(min(availH * 0.34f, availW * 0.22f), 148.dp)
-                val dpad = min(min(availH * 0.36f, availW * 0.24f), 148.dp)
-                val faceBtn = min(stick * 0.40f, 52.dp)
-                val faceSpan = min(stick * 0.48f, 62.dp)
+                val stick = min(min(availH * 0.32f, availW * 0.22f), 148.dp)
+                val dpad = min(min(availH * 0.34f, availW * 0.24f), 148.dp)
+                // Face buttons +20% vs prior stick*0.40 / 52dp caps
+                val faceBtn = min(stick * 0.48f, 62.dp)
+                val faceSpan = min(stick * 0.56f, 72.dp)
+                // Extra space between face cluster (A) and RS (~18dp)
+                val faceToStickGap = 18.dp
 
                 Row(
                     Modifier.fillMaxSize(),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // LEFT GRIP: LS upper, D-pad lower
+                    // LEFT GRIP
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.SpaceEvenly,
@@ -199,31 +225,31 @@ fun ControllerScreen(vm: ControllerViewModel) {
                             .fillMaxHeight()
                     ) {
                         Text(
-                            "XBOX",
-                            color = XboxGreen.copy(alpha = 0.9f),
+                            "PIXEL",
+                            color = NeonRed,
                             fontWeight = FontWeight.Black,
-                            fontSize = 15.sp,
+                            fontSize = 14.sp,
                             letterSpacing = 3.sp
                         )
                         Text(
-                            "ONE",
-                            color = TextMuted,
+                            "GAMEPAD",
+                            color = NeonOrange.copy(alpha = 0.9f),
                             fontSize = 10.sp,
-                            letterSpacing = 3.sp,
+                            letterSpacing = 2.sp,
                             fontWeight = FontWeight.SemiBold
                         )
                         Spacer(Modifier.height(12.dp))
                         SmallPill("Share", s.share, vm::setShare)
                     }
 
-                    // RIGHT GRIP: face upper, RS lower (same stick diameter as LS)
+                    // RIGHT GRIP: face upper (moved up), gap, RS lower
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.SpaceEvenly,
+                        verticalArrangement = Arrangement.Top,
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxHeight()
-                            .padding(end = 4.dp, bottom = 6.dp)
+                            .padding(end = 4.dp, top = 4.dp, bottom = 6.dp)
                     ) {
                         FaceButtonCluster(
                             buttonSize = faceBtn,
@@ -237,6 +263,8 @@ fun ControllerScreen(vm: ControllerViewModel) {
                             onX = vm::setButtonX,
                             onY = vm::setButtonY
                         )
+                        Spacer(Modifier.height(faceToStickGap))
+                        Spacer(Modifier.weight(1f))
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Joystick(
                                 diameter = stick,
@@ -264,7 +292,8 @@ private fun StatusBar(
         Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
-            .background(XboxPanel.copy(alpha = 0.92f))
+            .background(NeonPanel.copy(alpha = 0.94f))
+            .border(1.dp, NeonRed.copy(alpha = 0.35f), RoundedCornerShape(14.dp))
             .padding(horizontal = 14.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
@@ -278,82 +307,68 @@ private fun StatusBar(
                     else -> "IDLE"
                 },
                 color = when {
-                    connected -> XboxGreen
-                    advertising -> Color(0xFFF1C40F)
-                    vm.connectionState == HidDeviceManager.ConnectionState.ERROR -> Color(0xFFE74C3C)
+                    connected -> NeonCyan
+                    advertising -> NeonOrange
+                    vm.connectionState == HidDeviceManager.ConnectionState.ERROR -> NeonRed
                     else -> TextMuted
                 },
                 fontWeight = FontWeight.Bold,
-                fontSize = 12.sp,
+                fontSize = 13.sp,
                 letterSpacing = 1.sp
             )
             Text(
                 text = vm.statusText,
-                color = TextPrimary.copy(alpha = 0.85f),
-                fontSize = 12.sp,
+                color = TextMuted,
+                fontSize = 11.sp,
                 maxLines = 1
             )
         }
-        Spacer(Modifier.width(12.dp))
         if (connected || advertising) {
             Button(
-                onClick = vm::disconnect,
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF444444)),
-                shape = RoundedCornerShape(10.dp)
-            ) { Text("Disconnect") }
+                onClick = { vm.disconnect() },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = NeonPanel,
+                    contentColor = TextPrimary
+                ),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.height(36.dp)
+            ) {
+                Text("Disconnect", fontSize = 12.sp)
+            }
         } else {
             Button(
-                onClick = vm::connect,
-                colors = ButtonDefaults.buttonColors(containerColor = XboxGreen),
-                shape = RoundedCornerShape(10.dp)
-            ) { Text("Connect") }
+                onClick = { vm.connect() },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = NeonRed,
+                    contentColor = Color.White
+                ),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.height(36.dp)
+            ) {
+                Text("Connect", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            }
         }
     }
 }
 
 @Composable
-private fun GuideButton(pressed: Boolean, onPress: (Boolean) -> Unit) {
+private fun SmallPill(
+    label: String,
+    pressed: Boolean,
+    onPress: (Boolean) -> Unit,
+) {
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
-            .size(48.dp)
-            .shadow(6.dp, CircleShape)
-            .clip(CircleShape)
-            .background(Color(0xFF1A1A1A))
-            .border(3.dp, if (pressed) XboxGreen else GuideRing.copy(alpha = 0.7f), CircleShape)
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onPress = {
-                        onPress(true)
-                        try {
-                            awaitRelease()
-                        } finally {
-                            onPress(false)
-                        }
-                    }
-                )
-            }
-    ) {
-        Text(
-            "X",
-            color = if (pressed) XboxGreen else Color.White,
-            fontWeight = FontWeight.Black,
-            fontSize = 20.sp
-        )
-    }
-}
-
-@Composable
-private fun SmallPill(label: String, pressed: Boolean, onPress: (Boolean) -> Unit) {
-    val shape = RoundedCornerShape(20.dp)
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier
-            .height(26.dp)
-            .width(54.dp)
-            .clip(shape)
-            .background(if (pressed) XboxGreen else Color(0xFF2A2A2A))
-            .border(1.dp, if (pressed) XboxGreen else Color(0xFF555555), shape)
+            .height(28.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(if (pressed) NeonRed.copy(alpha = 0.85f) else NeonPanel)
+            .border(
+                1.dp,
+                if (pressed) NeonOrange else NeonRed.copy(alpha = 0.35f),
+                RoundedCornerShape(14.dp)
+            )
+            .padding(horizontal = 12.dp)
             .pointerInput(Unit) {
                 detectTapGestures(
                     onPress = {
@@ -369,9 +384,46 @@ private fun SmallPill(label: String, pressed: Boolean, onPress: (Boolean) -> Uni
     ) {
         Text(
             label,
-            color = TextPrimary,
+            color = if (pressed) Color.White else TextPrimary,
             fontSize = 11.sp,
-            fontWeight = FontWeight.SemiBold,
+            fontWeight = FontWeight.SemiBold
+        )
+    }
+}
+
+@Composable
+private fun GuideButton(
+    pressed: Boolean,
+    onPress: (Boolean) -> Unit,
+) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .size(42.dp)
+            .shadow(8.dp, CircleShape, ambientColor = NeonRed.copy(alpha = 0.5f))
+            .clip(CircleShape)
+            .background(
+                if (pressed) NeonRed else NeonPanel
+            )
+            .border(2.5.dp, GuideRing, CircleShape)
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onPress = {
+                        onPress(true)
+                        try {
+                            awaitRelease()
+                        } finally {
+                            onPress(false)
+                        }
+                    }
+                )
+            }
+    ) {
+        Text(
+            "X",
+            color = if (pressed) Color.White else NeonOrange,
+            fontWeight = FontWeight.Black,
+            fontSize = 16.sp,
             textAlign = TextAlign.Center
         )
     }

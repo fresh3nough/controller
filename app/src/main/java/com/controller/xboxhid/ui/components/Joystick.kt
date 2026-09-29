@@ -98,7 +98,7 @@ fun Joystick(
                 center = Offset(cx, cy)
             )
             drawCircle(
-                color = if (active) XboxGreen.copy(alpha = 0.55f) else Color(0xFF3A3A3A),
+                color = if (active) XboxGreen.copy(alpha = 0.85f) else Color(0xFF3A2030),
                 radius = outerR,
                 center = Offset(cx, cy),
                 style = Stroke(width = stroke)

@@ -1,6 +1,10 @@
-# Xbox HID Controller
+# Pixel Gamepad
 
-Turn an **Android 9+** phone into a **Bluetooth Xbox-style gamepad**. Your MacBook (or any host) pairs it like a real controller — no Mac app required. Works with **Xbox Cloud Gaming** (`xbox.com/play`) via the browser Gamepad API.
+![Pixel Gamepad cyberpunk UI](docs/ui-landscape.png)
+
+Turn an **Android 9+** phone into a **Bluetooth Xbox-style gamepad** with a neon cyberpunk skin. Your MacBook pairs it like a real controller — no Mac app required. Works with **Xbox Cloud Gaming** (`xbox.com/play`) via the browser Gamepad API.
+
+**v1.4.0** — D-pad fixed for Chrome/Xbox Cloud (hat + buttons 12–15), cyberpunk neon red/black/orange UI, larger ABXY, equal sticks.
 
 ```
 Android App (Compose UI + HID Profile) ──Bluetooth──▶ Mac sees "Pixel Gamepad"
@@ -15,7 +19,9 @@ Typical latency: **~20–40 ms** over Bluetooth HID — playable for cloud gamin
 
 - Bluetooth **HID Device** mode (`BluetoothHidDevice`) — Android acts as the controller
 - HID report descriptor for a standard **gamepad** (8-bit dual sticks, LT/RT, 16 buttons, hat D-pad)
-- **Xbox One geometry** UI (Jetpack Compose): equal-size dual sticks, left stick upper / D-pad lower, face buttons upper / right stick lower, LB/RB + LT/RT, View/Menu/Guide/Share
+- **D-pad dual-report**: hat switch **and** buttons 13–16 so Chrome / Xbox Cloud map Up/Down/Left/Right correctly
+- **Cyberpunk neon** UI (red / black / orange) — Jetpack Compose Xbox One geometry
+- Equal-size dual sticks; face buttons +20%; extra gap between A and right stick
 - Adaptive layout sized to the viewport so sticks match and the D-pad is never clipped
 - Advertises as **Pixel Gamepad** (generic HID) so macOS does not expect proprietary Xbox reports
 - Foreground service pumps reports at **~125 Hz**

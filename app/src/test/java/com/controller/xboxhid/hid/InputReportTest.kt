@@ -11,17 +11,13 @@ class InputReportTest {
         val r = InputReport.packNeutral()
         assertEquals(HidDescriptor.REPORT_SIZE, r.size)
 
-        // buttons zero
         assertEquals(0.toByte(), r[0])
         assertEquals(0.toByte(), r[1])
-        // hat released = 8
-        assertEquals(8.toByte(), r[2])
-        // sticks centered at 128
+        assertEquals(8.toByte(), r[2]) // hat released
         assertEquals(128.toByte(), r[3])
         assertEquals(128.toByte(), r[4])
         assertEquals(128.toByte(), r[5])
         assertEquals(128.toByte(), r[6])
-        // triggers zero
         assertEquals(0.toByte(), r[7])
         assertEquals(0.toByte(), r[8])
     }
@@ -62,7 +58,7 @@ class InputReportTest {
     }
 
     @Test
-    fun buttonsMask_face_and_shoulders() {
+    fun buttonsMask_face_shoulders_and_dpad_buttons() {
         val s = ControllerState(
             buttonA = true,
             buttonB = true,
@@ -76,24 +72,36 @@ class InputReportTest {
             start = true,
             stickL = true,
             stickR = true,
-            guide = true,
-            share = true,
+            dpad = InputReport.DPAD_UP or InputReport.DPAD_LEFT,
         )
         val m = InputReport.buttonsMask(s)
         assertEquals(
             InputReport.BTN_A or InputReport.BTN_B or InputReport.BTN_X or InputReport.BTN_Y or
                 InputReport.BTN_L1 or InputReport.BTN_R1 or InputReport.BTN_L2 or InputReport.BTN_R2 or
                 InputReport.BTN_BACK or InputReport.BTN_START or InputReport.BTN_L3 or
-                InputReport.BTN_R3 or InputReport.BTN_GUIDE or InputReport.BTN_SHARE,
+                InputReport.BTN_R3 or InputReport.BTN_DPAD_UP or InputReport.BTN_DPAD_LEFT,
             m
         )
+    }
+
+    @Test
+    fun dpad_dual_reported_as_hat_and_buttons() {
+        val s = ControllerState(dpad = InputReport.DPAD_RIGHT)
+        val r = InputReport.pack(s)
+        // hat east = 2
+        assertEquals(2, r[2].toInt() and 0x0F)
+        // button 16 (bit 15) = D-pad right → high button byte bit 7
+        assertTrue(((r[1].toInt() and 0xFF) and (InputReport.BTN_DPAD_RIGHT ushr 8)) != 0)
+        // only right bit among dpad buttons
+        val high = r[1].toInt() and 0xFF
+        assertEquals(InputReport.BTN_DPAD_RIGHT ushr 8, high and 0xF0)
     }
 
     @Test
     fun pack_full_deflection_and_buttons() {
         val s = ControllerState(
             leftX = 1f,
-            leftY = -1f, // up on screen → after invert = forward = max
+            leftY = -1f,
             rightX = -1f,
             rightY = 1f,
             leftTrigger = 1f,
@@ -104,16 +112,18 @@ class InputReportTest {
         )
         val r = InputReport.pack(s)
 
-        assertEquals(InputReport.AXIS_MAX, r[3].toInt() and 0xFF) // LX
-        assertEquals(InputReport.AXIS_MAX, r[4].toInt() and 0xFF) // LY inverted up
-        assertEquals(0, r[5].toInt() and 0xFF) // RX
-        assertEquals(0, r[6].toInt() and 0xFF) // RY inverted down
+        assertEquals(InputReport.AXIS_MAX, r[3].toInt() and 0xFF)
+        assertEquals(InputReport.AXIS_MAX, r[4].toInt() and 0xFF)
+        assertEquals(0, r[5].toInt() and 0xFF)
+        assertEquals(0, r[6].toInt() and 0xFF)
         assertEquals(255, r[7].toInt() and 0xFF)
         assertEquals(127, r[8].toInt() and 0xFF)
         assertTrue((r[0].toInt() and InputReport.BTN_A) != 0)
         assertTrue((r[0].toInt() and InputReport.BTN_R1) != 0)
-        assertTrue((r[0].toInt() and InputReport.BTN_L2) != 0) // LT digital
+        assertTrue((r[0].toInt() and InputReport.BTN_L2) != 0)
         assertEquals(0, r[2].toInt() and 0x0F) // hat north
+        // D-pad up also as button bit 12
+        assertTrue((r[1].toInt() and (InputReport.BTN_DPAD_UP ushr 8)) != 0)
     }
 
     @Test
@@ -135,7 +145,6 @@ class InputReportTest {
 
     @Test
     fun subclass_is_gamepad() {
-        // AOSP BluetoothHidDevice.SUBCLASS2_GAMEPAD == 2
         assertEquals(0x02.toByte(), HidDescriptor.SUBCLASS_GAMEPAD)
     }
 }

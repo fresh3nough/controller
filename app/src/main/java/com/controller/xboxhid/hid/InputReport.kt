@@ -5,6 +5,11 @@ package com.controller.xboxhid.hid
  *
  * Stick values are normalized floats in [-1, 1].
  * Triggers are floats in [0, 1].
+ *
+ * D-pad is dual-reported:
+ *  1) Hat switch nibble (byte 2) — classic HID
+ *  2) Buttons 13–16 (bits 12–15) — Chrome / standard gamepad mapping
+ *     (buttons[12]=Up, [13]=Down, [14]=Left, [15]=Right)
  */
 data class ControllerState(
     var leftX: Float = 0f,
@@ -56,20 +61,29 @@ object InputReport {
     const val AXIS_MAX = 255
 
     // Button bit positions matching descriptor order (Button 1..16)
+    // Chrome standard mapping expects:
+    //  0=A 1=B 2=X 3=Y 4=L1 5=R1 6=L2 7=R2 8=Back 9=Start 10=L3 11=R3
+    //  12=DpadUp 13=DpadDown 14=DpadLeft 15=DpadRight
     const val BTN_A = 1 shl 0
     const val BTN_B = 1 shl 1
     const val BTN_X = 1 shl 2
     const val BTN_Y = 1 shl 3
     const val BTN_L1 = 1 shl 4
     const val BTN_R1 = 1 shl 5
-    const val BTN_L2 = 1 shl 6   // digital trigger click (also sent as analog)
+    const val BTN_L2 = 1 shl 6
     const val BTN_R2 = 1 shl 7
     const val BTN_BACK = 1 shl 8
     const val BTN_START = 1 shl 9
     const val BTN_L3 = 1 shl 10
     const val BTN_R3 = 1 shl 11
-    const val BTN_GUIDE = 1 shl 12
-    const val BTN_SHARE = 1 shl 13
+    // D-pad as buttons 13-16 (bits 12-15) for Chrome Gamepad API / Xbox Cloud
+    const val BTN_DPAD_UP = 1 shl 12
+    const val BTN_DPAD_DOWN = 1 shl 13
+    const val BTN_DPAD_LEFT = 1 shl 14
+    const val BTN_DPAD_RIGHT = 1 shl 15
+
+    // Guide/Share are not in the 16-button standard map; keep as extra if needed
+    // via hat-only path. We reclaim bits 12-15 for D-pad buttons.
 
     const val DPAD_UP = 1
     const val DPAD_DOWN = 2
@@ -120,15 +134,17 @@ object InputReport {
         if (state.buttonY) m = m or BTN_Y
         if (state.bumperL) m = m or BTN_L1
         if (state.bumperR) m = m or BTN_R1
-        // Digital trigger bits when analog is past a click threshold
         if (state.leftTrigger >= 0.12f) m = m or BTN_L2
         if (state.rightTrigger >= 0.12f) m = m or BTN_R2
         if (state.back) m = m or BTN_BACK
         if (state.start) m = m or BTN_START
         if (state.stickL) m = m or BTN_L3
         if (state.stickR) m = m or BTN_R3
-        if (state.guide) m = m or BTN_GUIDE
-        if (state.share) m = m or BTN_SHARE
+        // D-pad as discrete buttons for Chrome standard mapping (indices 12-15)
+        if (state.dpad and DPAD_UP != 0) m = m or BTN_DPAD_UP
+        if (state.dpad and DPAD_DOWN != 0) m = m or BTN_DPAD_DOWN
+        if (state.dpad and DPAD_LEFT != 0) m = m or BTN_DPAD_LEFT
+        if (state.dpad and DPAD_RIGHT != 0) m = m or BTN_DPAD_RIGHT
         return m
     }
 
