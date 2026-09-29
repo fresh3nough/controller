@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="xbox_green">#FF107C10</color>
+    <color name="xbox_body">#FF1A1A1A</color>
+    <color name="xbox_body_light">#FF2A2A2A</color>
+    <color name="xbox_face_a">#FF3EB489</color>
+    <color name="xbox_face_b">#FFE74C3C</color>
+    <color name="xbox_face_x">#FF3498DB</color>
+    <color name="xbox_face_y">#FFF1C40F</color>
+    <color name="xbox_bumper">#FF3A3A3A</color>
+    <color name="xbox_stick">#FF4A4A4A</color>
+    <color name="xbox_stick_knob">#FF6A6A6A</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="black">#FF000000</color>
+</resources>

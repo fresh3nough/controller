@@ -1,0 +1,42 @@
+# Built application files
+*.apk
+*.ap_
+*.aab
+
+# Built binaries
+*.dex
+*.class
+
+# Generated files
+bin/
+gen/
+out/
+build/
+app/build/
+
+# Gradle
+.gradle/
+gradle-app.setting
+!gradle-wrapper.jar
+local.properties
+.gradletasknamecache
+
+# Android Studio / IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+.DS_Store
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Kotlin
+.kotlin/
+
+# Misc
+*.log
+*.swp
+.vscode/
+*.keystore
+google-services.json
