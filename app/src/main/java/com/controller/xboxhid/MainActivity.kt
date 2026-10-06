@@ -36,7 +36,14 @@ class MainActivity : ComponentActivity() {
     private val enableBtLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) {
-        // User returned from BT enable prompt; ViewModel connect is manual
+        // User returned from BT enable prompt
+    }
+
+    /** Makes the phone discoverable so Linux/macOS can pair the HID SDP record. */
+    private val discoverableLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        // Result code is the number of seconds discoverable; ignore
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,6 +54,11 @@ class MainActivity : ComponentActivity() {
             c.hide(WindowInsetsCompat.Type.systemBars())
             c.systemBarsBehavior =
                 WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        }
+
+        // Allow the Compose UI / ViewModel to request discoverable without privileged APIs.
+        vm.discoverableRequester = {
+            requestDiscoverable()
         }
 
         setContent {
@@ -97,5 +109,12 @@ class MainActivity : ComponentActivity() {
             val intent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
             enableBtLauncher.launch(intent)
         }
+    }
+
+    fun requestDiscoverable(seconds: Int = 300) {
+        val intent = Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE).apply {
+            putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, seconds)
+        }
+        runCatching { discoverableLauncher.launch(intent) }
     }
 }

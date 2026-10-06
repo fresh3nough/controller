@@ -4,7 +4,7 @@
 
 Turn an **Android 9+** phone into a **Bluetooth Xbox-style gamepad** with a neon cyberpunk skin. Your MacBook pairs it like a real controller — no Mac app required. Works with **Xbox Cloud Gaming** (`xbox.com/play`) via the browser Gamepad API.
 
-**v1.4.4** — ABXY +25% and D-pad +35% larger. **v1.4.3** — RS look Y on HID Rx, independent L3/R3, layout polish. **v1.4.1** — Stick Y polarity. **v1.4.0** — D-pad dual-report + cyberpunk neon UI.
+**v1.5.0** — Linux/BlueZ host pairing: discovery + bond + HID connect retries. **v1.4.4** — ABXY +25% and D-pad +35% larger. **v1.4.3** — RS look Y on HID Rx, independent L3/R3, layout polish.
 
 ```
 Android App (Compose UI + HID Profile) ──Bluetooth──▶ Mac sees "Pixel Gamepad"
@@ -148,6 +148,8 @@ If look is still flipped after updating the app, toggle Invert Y once, or re-pai
 | Mac shows phone as audio/headset | Unpair both sides; phone must advertise HID gamepad SDP before pairing |
 | Still nothing after re-pair | `adb logcat -s HidDeviceManager:I HidDeviceService:V` — look for `report sent` and `onConnectionStateChanged CONNECTED` |
 | Mac doesn’t see device | Phone must show **ADVERTISING**; put Mac Bluetooth UI in pairing mode; forget old pairings |
+| Linux BlueZ connects as headset / HFP fails | Do **not** rely on `bluetoothctl connect` alone (it prefers HFP). Run `./scripts/linux-host-pair.sh`, phone **Connect** while ADVERTISING; app bonds + `BluetoothHidDevice.connect()`. Check `journalctl -u bluetooth -f` for HID/UHID |
+| Linux paired but no `/dev/input` | Ensure `UserspaceHID=true` in `/etc/bluetooth/input.conf`, re-pair, confirm app status **CONNECTED**, then `cat /proc/bus/input/devices` |
 | Gamepad tester sees pad but no input | Ensure status is **CONNECTED**; move sticks — reports only flow while connected |
 | Install unauthorized | `adb devices` → accept RSA fingerprint on phone |
 | API < 28 | `BluetoothHidDevice` is unavailable |
@@ -156,6 +158,28 @@ If look is still flipped after updating the app, toggle Invert Y once, or re-pai
 
 MIT
 
+
+## Linux host (BlueZ)
+
+BlueZ treats phones as audio gateways by default. For HID gamepad input:
+
+```bash
+# On the Linux machine
+./scripts/linux-host-pair.sh
+# optional: pass phone MAC if you already know it
+# ./scripts/linux-host-pair.sh 34:39:16:6C:84:14
+```
+
+1. Script sets the adapter **pairable + discoverable** with a `NoInputNoOutput` agent.
+2. Phone app → **Connect** (ADVERTISING). v1.5+ discovers computer-class hosts, bonds, and calls `BluetoothHidDevice.connect()`.
+3. Confirm: app shows **CONNECTED**, and Linux has an input node:
+
+```bash
+grep -A5 -i 'Pixel Gamepad\|Gamepad' /proc/bus/input/devices
+# or open https://gamepad-tester.com in Chrome
+```
+
+> `bluetoothctl connect <phone>` often fails with Hands-Free errors — that is expected. The HID connection must be initiated from the Android HID device profile (the app does this).
 
 ## Troubleshooting (macOS)
 

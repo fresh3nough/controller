@@ -29,6 +29,9 @@ class ControllerViewModel(app: Application) : AndroidViewModel(app),
     var uiState by mutableStateOf(ControllerState())
         private set
 
+    /** Set by MainActivity so we can fire ACTION_REQUEST_DISCOVERABLE without privileged APIs. */
+    var discoverableRequester: (() -> Unit)? = null
+
     private var service: HidControllerService? = null
 
     private val connection = object : ServiceConnection {
@@ -72,6 +75,8 @@ class ControllerViewModel(app: Application) : AndroidViewModel(app),
     }
 
     fun connect() {
+        // Ask the user to make the phone discoverable (required for first Linux/macOS pair).
+        discoverableRequester?.invoke()
         HidControllerService.start(getApplication())
         service?.startAdvertising()
     }

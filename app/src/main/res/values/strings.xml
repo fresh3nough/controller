@@ -4,8 +4,8 @@
     <string name="notification_channel">HID Controller</string>
     <string name="notification_title">Xbox Controller Active</string>
     <string name="notification_text">Advertising as Bluetooth gamepad</string>
-    <string name="status_idle">Tap Connect to advertise as Xbox Controller</string>
-    <string name="status_advertising">Waiting for Mac / host to pair…</string>
+    <string name="status_idle">Tap Connect to advertise as gamepad</string>
+    <string name="status_advertising">Advertising Pixel Gamepad — pair from Mac/Linux/Windows…</string>
     <string name="status_connected">Connected — sending HID reports</string>
     <string name="status_error">Bluetooth HID unavailable on this device</string>
     <string name="btn_connect">Connect</string>

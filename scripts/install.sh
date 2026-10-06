@@ -103,6 +103,22 @@ if [[ "$DO_GRANT" -eq 1 ]]; then
   fi
 fi
 
+# Optional: seed preferred Bluetooth host MAC so the app bonds this machine first.
+# Example: PREFERRED_HOST_MAC=6C:A1:00:10:78:A4 ./scripts/install.sh
+if [[ -n "${PREFERRED_HOST_MAC:-}" ]]; then
+  echo "==> Seeding preferred HID host ${PREFERRED_HOST_MAC}…"
+  TMP_HOST="/data/local/tmp/hid_host_prefs.xml"
+  adb shell "cat > $TMP_HOST" <<EOF
+<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+  <string name="preferred_host_addr">${PREFERRED_HOST_MAC}</string>
+</map>
+EOF
+  adb shell "run-as $PKG mkdir -p shared_prefs" 2>/dev/null || true
+  adb shell "run-as $PKG cp $TMP_HOST shared_prefs/hid_host_prefs.xml" 2>/dev/null || true
+  adb shell "run-as $PKG cat shared_prefs/hid_host_prefs.xml" 2>/dev/null || true
+fi
+
 if [[ "$DO_LAUNCH" -eq 1 ]]; then
   echo "==> Launching…"
   adb shell am start -n "$PKG/com.controller.xboxhid.MainActivity" || \
